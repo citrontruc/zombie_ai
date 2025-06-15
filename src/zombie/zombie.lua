@@ -17,30 +17,34 @@ function Zombie:new(initial_x, initial_y, size_x, size_y, speed, speed_run, dist
         speed_run = speed_run,
         distance_from_player_square = (distance_threshold + 1)^2,
         distance_threshold = distance_threshold,
-        graphics_handler = ZombieGraphicsHandler:new(),
+        graphics_handler = ZombieGraphicsHandler:new(initial_x, initial_y, size_x, size_y, speed),
         angle = 0,
-        state = 1,
+        state = 3,
         dict_state = {
-            "idle",
-            "detect_human",
-            "pursue_human",
-            "attracted_by_other_zombie",
-            "lost_human"
+            idle = 1,
+            detect_human = 2,
+            pursue_human = 3,
+            attracted_by_other_zombie = 4,
+            lost_human = 5
         },
+        timer = 0
     }
     setmetatable(zombie, Zombie)
     return zombie
 end
 
-function Zombie:compute_distance_from_player(x_player, y_player)
-    return (self.y - y_player)^2 + (self.x - x1_player)^2
+-- function to compute relationship to player
+
+function Zombie:compute_distance_from_player(player_x, player_y)
+    return (self.y - player_y)^2 + (self.x - player_x)^2
 end
 
-function Zombie:get_angle(x_player, y_player)
-    return math.atan2(self.y - y_player, self.x - x1_player)
+function Zombie:get_angle(player_x, player_y)
+    return math.atan2(player_y - self.y, player_x - self.x)
 end
 
-function Zombie:update(dt, x_player, y_player)
+--function to update zombie
+function Zombie:update(dt, player_x, player_y)
     local update_function = {
         Zombie.update_idle,
         Zombie.update_stun,
@@ -49,15 +53,22 @@ function Zombie:update(dt, x_player, y_player)
         Zombie.update_run_in_direction
     }
     local chosen_update_function = update_function[self.state]
-    chosen_update_function(self, x_player, y_player, dt)
-    self.distance_from_player_square = self.compute_distance_from_player(x_player, y_player)
-    self.state = self.update_state()
+    chosen_update_function(self, dt, player_x, player_y)
+    self.distance_from_player_square = self:compute_distance_from_player(player_x, player_y)
+    self.graphics_handler:update(self.x, self.y)
+    self.state = self:update_state()
 end
 
-function Zombie:update_pursue_human(dt)
+-- Movement functions
+function Zombie:update_idle(dt)
+    self.x = self.x + self.speed * (math.random(1, 2) * 2 - 3) * dt
+    self.y = self.y + self.speed * (math.random(1, 2) * 2 - 3) * dt
+end
+
+function Zombie:update_pursue_human(dt, player_x, player_y)
     self.x = self.x + self.speed_run * math.cos(self.angle) * dt
     self.y = self.y + self.speed_run * math.sin(self.angle) * dt
-    self.angle = self.get_angle(x_player, y_player)
+    self.angle = self:get_angle(player_x, player_y)
 end
 
 function Zombie:update_run_in_past_direction(dt)
@@ -65,8 +76,18 @@ function Zombie:update_run_in_past_direction(dt)
     self.y = self.y + self.speed_run * math.sin(self.angle) * dt
 end
 
+-- function to update zombie state
+function Zombie:update_state(dt)
+    if self.distance_from_player_square < self.distance_threshold then return 3 end
+    return 1
+end
+
+function Zombie:set_timer(dt)
+    self.timer = self.timer + dt
+end
+
 function Zombie:draw()
-    self.graphics_handler:draw(dt, self.state)
+    self.graphics_handler:draw()
 end
 
 return Zombie
