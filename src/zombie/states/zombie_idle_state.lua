@@ -12,8 +12,10 @@ function ZombieIdleState:new(zombie)
 end
 
 function ZombieIdleState:update(dt)
-    self.zombie.x = self.zombie.x + self.zombie.speed * (math.random(1, 2) * 2 - 3) * dt
-    self.zombie.y = self.zombie.y + self.zombie.speed * (math.random(1, 2) * 2 - 3) * dt
+    self.zombie.x = self.zombie.x + self.zombie.speed * self.zombie.idle_coefficient_x * dt
+    self.zombie.y = self.zombie.y + self.zombie.speed * self.zombie.idle_coefficient_y * dt
+    if self.zombie.timer >= 1 then return true end
+    return false
 end
 
 return ZombieIdleState

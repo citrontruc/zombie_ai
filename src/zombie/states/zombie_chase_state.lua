@@ -14,6 +14,7 @@ end
 function ZombieChaseState:update(dt)
     self.zombie.x = self.zombie.x + self.zombie.speed_run * math.cos(self.zombie.angle) * dt
     self.zombie.y = self.zombie.y + self.zombie.speed_run * math.sin(self.zombie.angle) * dt
+    return true
 end
 
 return ZombieChaseState
