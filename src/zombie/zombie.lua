@@ -1,6 +1,9 @@
 -- An object to create a zombie
 -- Zombies are controlled by a state machine.
 
+local ChaseState = require("src.zombie.states.zombie_chase_state")
+local IdleState = require("src.zombie.states.zombie_idle_state")
+
 local ZombieGraphicsHandler = require("src.graphics.zombie_graphics_handler")
 
 local Zombie = {}
@@ -19,16 +22,16 @@ function Zombie:new(initial_x, initial_y, size_x, size_y, speed, speed_run, dist
         distance_threshold = distance_threshold,
         graphics_handler = ZombieGraphicsHandler:new(initial_x, initial_y, size_x, size_y, speed),
         angle = 0,
-        state = 3,
-        dict_state = {
-            idle = 1,
-            detect_human = 2,
-            pursue_human = 3,
-            attracted_by_other_zombie = 4,
-            lost_human = 5
-        },
-        timer = 0
+        current_state = "idle",
+        timer = 0,
+        direction_idle_y = 1,
+        direction_idle_x = 1,
     }
+    states = {
+        idle = IdleState:new(zombie),
+        chase = ChaseState:new(zombie)
+    }
+    zombie.states = states
     setmetatable(zombie, Zombie)
     return zombie
 end
@@ -45,41 +48,20 @@ end
 
 --function to update zombie
 function Zombie:update(dt, player_x, player_y)
-    local update_function = {
-        Zombie.update_idle,
-        Zombie.update_stun,
-        Zombie.update_pursue_human,
-        Zombie.update_go_towards_other_zombie,
-        Zombie.update_run_in_direction
-    }
-    local chosen_update_function = update_function[self.state]
-    chosen_update_function(self, dt, player_x, player_y)
+    -- Update variables
     self.distance_from_player_square = self:compute_distance_from_player(player_x, player_y)
-    self.graphics_handler:update(self.x, self.y)
-    self.state = self:update_state()
-end
-
--- Movement functions
-function Zombie:update_idle(dt)
-    self.x = self.x + self.speed * (math.random(1, 2) * 2 - 3) * dt
-    self.y = self.y + self.speed * (math.random(1, 2) * 2 - 3) * dt
-end
-
-function Zombie:update_pursue_human(dt, player_x, player_y)
-    self.x = self.x + self.speed_run * math.cos(self.angle) * dt
-    self.y = self.y + self.speed_run * math.sin(self.angle) * dt
     self.angle = self:get_angle(player_x, player_y)
-end
 
-function Zombie:update_run_in_past_direction(dt)
-    self.x = self.x + self.speed_run * math.cos(self.angle) * dt
-    self.y = self.y + self.speed_run * math.sin(self.angle) * dt
+    -- Update position, graphics and states
+    self.states[self.current_state]:update(dt)
+    self.graphics_handler:update(self.x, self.y)
+    self.current_state = self:update_state(dt)
 end
 
 -- function to update zombie state
 function Zombie:update_state(dt)
-    if self.distance_from_player_square < self.distance_threshold then return 3 end
-    return 1
+    if self.distance_from_player_square < self.distance_threshold then return "chase" end
+    return "idle"
 end
 
 function Zombie:set_timer(dt)

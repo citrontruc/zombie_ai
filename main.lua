@@ -15,7 +15,7 @@ local zombie_size_x = 20
 local zombie_size_y = 20
 local zombie_speed = 100
 local zombie_speed_run = 100
-local zombie_distance_threshold = 100000
+local zombie_distance_threshold = 300^2
 local zombie = Zombie:new(zombie_x, zombie_y, zombie_size_x, zombie_size_y, zombie_speed, zombie_speed_run, zombie_distance_threshold)
 
 -- Change sizeof screen
