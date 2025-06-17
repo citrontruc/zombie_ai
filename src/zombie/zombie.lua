@@ -1,12 +1,6 @@
 -- An object to create a zombie
 -- Zombies are controlled by a state machine.
 
-local ChaseState = require("src.zombie.states.zombie_chase_state")
-local IdleState = require("src.zombie.states.zombie_idle_state")
-local WaitState = require("src.zombie.states.zombie_wait_state")
-
-local ZombieGraphicsHandler = require("src.graphics.zombie_graphics_handler")
-
 local Zombie = {}
 Zombie.__index = Zombie
 
@@ -21,21 +15,23 @@ function Zombie:new(initial_x, initial_y, size_x, size_y, speed, speed_run, dist
         speed_run = speed_run,
         distance_from_player_square = (distance_threshold + 1)^2,
         distance_threshold = distance_threshold,
-        graphics_handler = ZombieGraphicsHandler:new(initial_x, initial_y, size_x, size_y, speed),
         angle = 0,
         current_state = "idle",
         timer = 0,
         idle_coefficient_x = 0,
         idle_coefficient_y = 0,
+        states = {}
     }
-    states = {
-        chase = ChaseState:new(zombie),
-        idle = IdleState:new(zombie),
-        wait = WaitState:new(zombie)
-    }
-    zombie.states = states
     setmetatable(zombie, Zombie)
     return zombie
+end
+
+function Zombie:set_state(state_key, state_object)
+    self.states[state_key] = state_object
+end
+
+function Zombie:set_graphic_handler(graphics_handler)
+    self.graphics_handler = graphics_handler
 end
 
 -- function to compute relationship to player
@@ -58,7 +54,6 @@ function Zombie:update(dt, player_x, player_y)
     local reset_timer = self.states[self.current_state]:update(dt)
     self:check_for_walls()
     self:update_timer(dt, reset_timer)
-    self.graphics_handler:update(self.x, self.y)
     self.current_state = self:update_state(dt, reset_timer)
 end
 
@@ -87,7 +82,7 @@ function Zombie:update_timer(dt, reset_timer)
 end
 
 function Zombie:draw()
-    self.graphics_handler:draw()
+    self.graphics_handler:draw(self.x, self.y, self.size_x, self.size_y)
 end
 
 return Zombie

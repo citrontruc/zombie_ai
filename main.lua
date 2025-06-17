@@ -1,6 +1,6 @@
 -- Imports of our item
 local Player = require("src.player.player")
-local Zombie = require("src.zombie.zombie")
+local ZombieFactory = require("src.zombie.zombie_factory")
 
 -- Variables info
 local player_x = 100
@@ -16,7 +16,7 @@ local zombie_size_y = 20
 local zombie_speed = 100
 local zombie_speed_run = 100
 local zombie_distance_threshold = 300^2
-local zombie = Zombie:new(zombie_x, zombie_y, zombie_size_x, zombie_size_y, zombie_speed, zombie_speed_run, zombie_distance_threshold)
+local zombie_factory = ZombieFactory:new()
 
 -- Change sizeof screen
 love.window.setMode(1200, 800, flags)
@@ -24,7 +24,7 @@ love.window.setMode(1200, 800, flags)
 -- Main methods
 function love.load()
     player = Player:new(player_x, player_y, player_size_x, player_size_y, player_speed)
-    zombie = Zombie:new(zombie_x, zombie_y, zombie_size_x, zombie_size_y, zombie_speed, zombie_speed_run, zombie_distance_threshold)
+    zombie = zombie_factory:create_zombie(zombie_x, zombie_y, zombie_size_x, zombie_size_y, zombie_speed, zombie_speed_run, zombie_distance_threshold)
     -- Controls to take care of our controller
     local joysticks = love.joystick.getJoysticks()
     joystick = joysticks[1]
